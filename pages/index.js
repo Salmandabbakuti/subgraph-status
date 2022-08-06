@@ -1,8 +1,71 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import { useState, useEffect, useInterval } from "react";
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+import axios from "axios";
 
 export default function Home() {
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [updatedAt, setUpdatedAt] = useState(new Date());
+
+  useEffect(() => {
+    fetchData();
+  }, [searchQuery]);
+
+  setInterval(() => {
+    if (searchQuery) {
+      fetchData();
+    }
+  }, 30000);
+
+  const fetchData = () => {
+    setLoading(true);
+    axios
+      .post(
+        "https://api.thegraph.com/index-node/graphql",
+        {
+          query: `query indexingStatuses($subgraphs: [String!]) {
+              indexingStatuses(subgraphs: $subgraphs){
+                subgraph
+                synced
+                health
+                entityCount
+                chains {
+                  network
+                  chainHeadBlock {
+                    number
+                  }
+                  latestBlock {
+                    number
+                  }
+                  earliestBlock {
+                    number
+                  }
+                }
+              }
+            }`,
+          variables: {
+            ...searchQuery && { subgraphs: [searchQuery] },
+          }
+        },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      .then(({ data }) => {
+        setData(data.data.indexingStatuses);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,41 +76,71 @@ export default function Home() {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          <a href="https://nextjs.org">TheGraph</a> Status
         </h1>
 
+        <input
+          className={styles.search}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder='Search subgraph by ID: "Qm..."'
+          type='text'
+          value={searchQuery}
+        />
+
         <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
+          Last updated: {updatedAt.toLocaleString()}
         </p>
 
         <div className={styles.grid}>
           <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
+            <h2>ID</h2>
+            <p>{data[0]?.subgraph ? data[0].subgraph.slice(0, 20) + "..." : "-"}</p>
           </a>
 
           <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
+            <h2>Network</h2>
+            <p>{data[0]?.chains[0]?.network || "-"}</p>
           </a>
 
           <a
             href="https://github.com/vercel/next.js/tree/canary/examples"
             className={styles.card}
           >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
+            <h2>Health</h2>
+            <p>{data[0]?.health === 'healthy' ? "✅" : "❌"}</p>
+          </a>
+
+          <a href="https://nextjs.org/learn" className={styles.card}>
+            <h2>Synced</h2>
+            <p>{data[0]?.synced ? "✅" : "❌"}</p>
+          </a>
+
+          <a
+            href="https://github.com/vercel/next.js/tree/canary/examples"
+            className={styles.card}
+          >
+            <h2>Entities</h2>
+            <p>{data[0]?.entityCount || "-"}</p>
           </a>
 
           <a
             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
             className={styles.card}
           >
-            <h2>Deploy &rarr;</h2>
+            <h2>#Start Block</h2>
             <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
+              {data[0]?.chains[0]?.earliestBlock?.number || "-"}
             </p>
+          </a>
+
+          <a href="https://nextjs.org/docs" className={styles.card}>
+            <h2>#Synced Block</h2>
+            <p>{data[0]?.chains[0]?.latestBlock?.number || "-"}</p>
+          </a>
+
+          <a href="https://nextjs.org/docs" className={styles.card}>
+            <h2>#Latest Block</h2>
+            <p>{data[0]?.chains[0]?.chainHeadBlock?.number || "-"}</p>
           </a>
         </div>
       </main>
@@ -58,12 +151,12 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <span className={styles.logo}>
             <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
           </span>
         </a>
       </footer>
     </div>
-  )
+  );
 }
