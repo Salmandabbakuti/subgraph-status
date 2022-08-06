@@ -7,7 +7,7 @@ import axios from "axios";
 export default function Home() {
 
   const [data, setData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("QmcqvocMfm9LDSEDYmeexzeGt1QTY7T7AVitX9mG2qkvjR");
 
   useEffect(() => {
     fetchData();
