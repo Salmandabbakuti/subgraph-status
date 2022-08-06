@@ -5,9 +5,10 @@ import styles from "../styles/Home.module.css";
 import axios from "axios";
 
 export default function Home() {
-
   const [data, setData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("QmcqvocMfm9LDSEDYmeexzeGt1QTY7T7AVitX9mG2qkvjR");
+  const [searchQuery, setSearchQuery] = useState(
+    "QmcqvocMfm9LDSEDYmeexzeGt1QTY7T7AVitX9mG2qkvjR"
+  );
 
   useEffect(() => {
     fetchData();
@@ -39,7 +40,7 @@ export default function Home() {
               }
             }`,
           variables: {
-            ...searchQuery && { subgraphs: [searchQuery] },
+            ...(searchQuery && { subgraphs: [searchQuery] })
           }
         },
         {
@@ -74,14 +75,21 @@ export default function Home() {
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && fetchData()}
           placeholder='Search subgraph by ID: "Qm..."'
-          type='text'
+          type="text"
           value={searchQuery}
         />
 
         <div className={styles.grid}>
-          <a href={`https://api.thegraph.com/subgraphs/id/${data[0]?.subgraph}`} target="_blank" rel="noreferrer" className={styles.card}>
+          <a
+            href={`https://api.thegraph.com/subgraphs/id/${data[0]?.subgraph}`}
+            target="_blank"
+            rel="noreferrer"
+            className={styles.card}
+          >
             <h2>ID</h2>
-            <p>{data[0]?.subgraph ? data[0].subgraph.slice(0, 20) + "..." : "-"}</p>
+            <p>
+              {data[0]?.subgraph ? data[0].subgraph.slice(0, 20) + "..." : "-"}
+            </p>
           </a>
 
           <div className={styles.card}>
@@ -91,7 +99,7 @@ export default function Home() {
 
           <div className={styles.card}>
             <h2>Health</h2>
-            <p>{data[0]?.health === 'healthy' ? "✅" : "❌"}</p>
+            <p>{data[0]?.health === "healthy" ? "✅" : "❌"}</p>
           </div>
 
           <div className={styles.card}>
@@ -105,23 +113,31 @@ export default function Home() {
           </div>
 
           <div className={styles.card}>
-            <h2>#Start Block</h2>
-            <p>
-              {data[0]?.chains[0]?.earliestBlock?.number || "-"}
-            </p>
+            <h2>#Start</h2>
+            <p>{data[0]?.chains[0]?.earliestBlock?.number || "-"}</p>
           </div>
 
           <div className={styles.card}>
-            <h2>#Synced Block</h2>
+            <h2>#Synced</h2>
             <p>{data[0]?.chains[0]?.latestBlock?.number || "-"}</p>
           </div>
 
           <div className={styles.card}>
-            <h2>#Latest Block</h2>
+            <h2>#Latest</h2>
             <p>{data[0]?.chains[0]?.chainHeadBlock?.number || "-"}</p>
           </div>
+          <div className={styles.card}>
+            <h2>%Progress</h2>
+            <p>
+              {(
+                (data[0]?.chains[0]?.latestBlock?.number /
+                  data[0]?.chains[0]?.chainHeadBlock?.number) *
+                100
+              ).toFixed(2) || "-"}
+            </p>
+          </div>
         </div>
-      </main >
+      </main>
 
       <footer className={styles.footer}>
         <a
@@ -135,6 +151,6 @@ export default function Home() {
           </span>
         </a>
       </footer>
-    </div >
+    </div>
   );
 }
